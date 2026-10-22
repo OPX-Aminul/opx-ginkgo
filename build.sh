@@ -37,8 +37,11 @@ setup_toolchain() {
         wget -q -O /tmp/antman.sh \
             https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman
     fi
-    bash /tmp/antman.sh -S=10032024 -P "$TC_DIR"
-    bash /tmp/antman.sh --patch=glibc -P "$TC_DIR"
+    (
+        cd "$TC_DIR"
+        bash /tmp/antman.sh -S=10032024
+        bash /tmp/antman.sh --patch=glibc
+    )
     if [ ! -x "$TC_DIR/bin/clang" ]; then
         FOUND="$(find "$HOME/toolchains" -maxdepth 3 -type f -name clang 2>/dev/null | head -1)"
         if [ -n "$FOUND" ]; then

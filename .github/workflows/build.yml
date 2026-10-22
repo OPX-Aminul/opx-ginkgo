@@ -38,13 +38,13 @@ jobs:
           curl -fsSL \
             https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman \
             -o /tmp/antman.sh
-          bash /tmp/antman.sh -S=10032024 -P "$HOME/toolchains"
-          bash /tmp/antman.sh --patch=glibc -P "$HOME/toolchains"
-          CLANG_BIN="$(find "$HOME/toolchains" -maxdepth 4 -type f -name clang | head -1)"
-          echo "Found: $CLANG_BIN"
-          TC_DIR="$(dirname "$(dirname "$CLANG_BIN")")"
+          TC_DIR="$HOME/toolchains/clang-10032024"
+          mkdir -p "$TC_DIR"
+          cd "$TC_DIR"
+          bash /tmp/antman.sh -S=10032024
+          bash /tmp/antman.sh --patch=glibc
           echo "TC_DIR=$TC_DIR" >> "$GITHUB_ENV"
-          "$CLANG_BIN" --version
+          "$TC_DIR/bin/clang" --version
 
       - name: Build kernel and packages
         run: |
