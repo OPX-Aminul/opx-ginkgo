@@ -1,0 +1,6 @@
+id=wifi_firmware
+name=OPX WiFi Firmware
+version=1.0.0
+versionCode=1
+description=USB WiFi firmware for OPX NetHunter kernel (RTL8188EU, MT76xx)
+author=OPX TEAM / OP AMINUL FF

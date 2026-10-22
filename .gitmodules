@@ -1,0 +1,6 @@
+[submodule "oob/8821au"]
+	path = oob/8821au
+	url = https://github.com/morrownr/8821au-20210708
+[submodule "oob/8814au"]
+	path = oob/8814au
+	url = https://github.com/Loukious/rtl8814au

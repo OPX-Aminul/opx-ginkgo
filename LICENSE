@@ -1,0 +1,17 @@
+                    GNU GENERAL PUBLIC LICENSE
+                       Version 2, June 1991
+
+ Copyright (C) 1989, 1992 Free Software Foundation, Inc.,
+ 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA
+ Everyone is permitted to copy and distribute verbatim copies
+ of this license document, but changing it is not allowed.
+
+OPX NetHunter Kernel (opx-nethunter-v1.0.0) for Redmi Note 8 / 8T
+(ginkgo/willow) is licensed under the GNU GPL v2 for kernel and
+in-tree driver code.
+
+Out-of-tree Realtek drivers (rtl8821au, rtl8814au) and the
+AnyKernel3 installer are provided under their own respective
+licenses (GPL-2.0 and MIT, respectively).
+
+See .gitmodules and the vendor source directories for details.

@@ -1,0 +1,11 @@
+
+   ___ ___     ___   _  ___   ___    __  __
+  / _ \| _ \   / _ \ | |/ / | | | |  /  \|  |
+ | |_| |_) || | |_| || '  \ |_| | | | /\ (/ |
+  \___//___/   \___/ |_|\___\___/  \/_/\ \_|
+                                          \__|
+
+  OPX-NetHunter  v1.0.0
+  Redmi Note 8 / 8T  (ginkgo / willow)
+  Linux 4.14  -  Kernel: OPX-NETHUNTER
+  Developer : OPX TEAM / OP AMINUL FF

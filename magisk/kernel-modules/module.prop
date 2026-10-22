@@ -1,0 +1,6 @@
+id=opx_kernel_modules
+name=OPX Kernel Modules
+version=1.0.0
+versionCode=1
+description=Auto-loads OPX NetHunter out-of-tree kernel .ko drivers at boot
+author=OPX TEAM / OP AMINUL FF
