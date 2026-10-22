@@ -1,0 +1,82 @@
+name: OPX NetHunter Kernel Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+            /opt/hostedtoolcache/CodeQL /usr/local/share/boost 2>/dev/null || true
+          df -h /
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          DEBIAN_FRONTEND=noninteractive sudo apt-get install -y -qq \
+            bc bison flex libssl-dev libelf-dev device-tree-compiler \
+            gcc-aarch64-linux-gnu kmod zip unzip git curl ca-certificates
+
+      - name: Install Neutron Clang 10032024
+        run: |
+          curl -fsSL \
+            https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman \
+            -o /tmp/antman.sh
+          bash /tmp/antman.sh -S=10032024 -P "$HOME/toolchains"
+          bash /tmp/antman.sh --patch=glibc -P "$HOME/toolchains"
+          CLANG_BIN="$(find "$HOME/toolchains" -maxdepth 4 -type f -name clang | head -1)"
+          echo "Found: $CLANG_BIN"
+          TC_DIR="$(dirname "$(dirname "$CLANG_BIN")")"
+          echo "TC_DIR=$TC_DIR" >> "$GITHUB_ENV"
+          "$CLANG_BIN" --version
+
+      - name: Build kernel and packages
+        run: |
+          bash build.sh
+          ls -lh out/*.zip
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: opx-nethunter-${{ github.run_number }}
+          path: out/opx-nethunter-*.zip
+          retention-days: 14
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="$(cat VERSION)"
+          STAMP="$(date +%Y%m%d-%H%M)"
+          TAG="opx-nethunter-v${VERSION}-${STAMP}-${GITHUB_RUN_NUMBER}"
+          NOTES="Automated NetHunter kernel build for ginkgo/willow.
+
+          Assets:
+          - opx-nethunter-v${VERSION}-ginkgo-${STAMP}.zip  (Kernel / AnyKernel3)
+          - opx-nethunter-v${VERSION}-modules-${STAMP}.zip (Magisk modules)
+          - opx-nethunter-v${VERSION}-firmware-${STAMP}.zip (USB WiFi firmware)
+
+          Flash guide: docs/FLASH.md"
+          gh release create "$TAG" \
+            --title "OPX NetHunter v${VERSION} (${STAMP})" \
+            --notes "$NOTES" \
+            out/opx-nethunter-v${VERSION}-ginkgo-${STAMP}.zip \
+            out/opx-nethunter-v${VERSION}-modules-${STAMP}.zip \
+            out/opx-nethunter-v${VERSION}-firmware-${STAMP}.zip
+          echo "Release created: $TAG"
