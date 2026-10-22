@@ -1,0 +1,39 @@
+name: OPX crDroid ROM Mirror
+
+# Runs on-demand so the crDroid A13 ginkgo/willow ROM can be attached to a
+# dedicated GitHub Release (kept on GitHub for the lifetime of the repo).
+on:
+  workflow_dispatch:
+    inputs:
+      rom_url:
+        description: "Custom crDroid A13 zip URL (leave empty to auto-detect)"
+        required: false
+        default: ""
+      twrp_url:
+        description: "TWRP img URL (arm64, ginkgo) - optional"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Publish crDroid ROM mirror
+        env:
+          REPO: OPX-Aminul/opx-ginkgo
+          GH_TOKEN: ${{ github.token }}
+          ROM_URL: ${{ github.event.inputs.rom_url }}
+          TWRP_URL: ${{ github.event.inputs.twrp_url }}
+        run: |
+          if [ -n "$TWRP_URL" ]; then
+              sed -i 's/TWRP_URL="$1"/TWRP_URL="$1"/' scripts/mirror-rom.sh
+          fi
+          bash scripts/mirror-rom.sh
