@@ -74,15 +74,13 @@ jobs:
         run: |
           VERSION="$(cat VERSION)"
           STAMP="$(cat out/BUILD_STAMP)"
-          TAG="opx-nethunter-v${VERSION}-${STAMP}-${GITHUB_RUN_NUMBER}"
+          TAG="opx-nethunter-v${VERSION}-${STAMP}"
           GZIP="$(sed -n 1p out/ARTIFACTS)"
-          MZIP="$(sed -n 2p out/ARTIFACTS)"
-          FZIP="$(sed -n 3p out/ARTIFACTS)"
-          NOTES="Automated NetHunter kernel build for ginkgo/willow.
+          FZIP="$(sed -n 2p out/ARTIFACTS)"
+          NOTES="Automated NetHunter kernel build for ginkgo/willow (build ${STAMP}).
 
           Assets:
-          - ${GZIP}  (Kernel / AnyKernel3)
-          - ${MZIP}  (Magisk modules)
+          - ${GZIP}  (Kernel / AnyKernel3 + embedded Magisk modules)
           - ${FZIP}  (USB WiFi firmware)
 
           Flash guide: docs/FLASH.md"
@@ -90,6 +88,5 @@ jobs:
             --title "OPX NetHunter v${VERSION} (${STAMP})" \
             --notes "$NOTES" \
             out/${GZIP} \
-            out/${MZIP} \
             out/${FZIP}
           echo "Release created: $TAG"

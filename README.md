@@ -35,8 +35,8 @@ Developer: **OPX TEAM / OP AMINUL FF**
   - `oob/8814au` - RTL8814AU
 - AnyKernel3 installer (OPX-branded)
 - Magisk modules:
-  - `magisk/kernel-modules` - auto-loads built .ko at boot
-  - `magisk/wifi-firmware` - USB WiFi firmware
+  - `magisk/kernel-modules` - source for .ko auto-loader (now **embedded** in the kernel zip)
+  - `magisk/wifi-firmware` - source for USB WiFi firmware zip
 
 ---
 
@@ -50,8 +50,9 @@ Developer: **OPX TEAM / OP AMINUL FF**
   `nethunter.kali.org` ginkgo kernel works (no extra kernel flag required).
 - **Bluetooth**: Fully enabled (`CONFIG_BT*`, including LE, RFCOMM, HIDP, HCIUART
   and vendor HCI drivers).
-- **External USB WiFi**: Monitor/injection/AP supported via USB adapters built into
-  the modules zip (`rtl88xxau`, `8821au`, `8814au`, `mt76`, `rtl8814au`). See
+- **External USB WiFi**: Monitor/injection/AP supported via USB adapters whose
+  `.ko` drivers are **embedded inside the kernel zip** (loaded by the `opx_kernel_modules`
+  Magisk module). Separate firmware blobs ship in the `firmware` zip. See
   `magisk/kernel-modules` and `magisk/wifi-firmware`.
 
 ---

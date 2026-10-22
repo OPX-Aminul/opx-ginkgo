@@ -10,9 +10,23 @@ SRC="$REPO_ROOT"
 OUT="$REPO_ROOT/out"
 JOBS="${JOBS:-$(nproc)}"
 VERSION="$(cat "$REPO_ROOT/VERSION" 2>/dev/null || echo 1.0.0)"
-STAMP="$(date +%Y%m%d-%H%M)"
+DATE_STAMP="$(date +%Y%m%d-%H%M)"
+
+# Auto-incrementing build number so each trigger yields a distinct version/tag.
+# Persisted in out/BUILD_NUM so re-runs on the same checkout continue upward.
+BUILD_NUM_FILE="$OUT/BUILD_NUM"
+mkdir -p "$OUT"
+if [ -f "$BUILD_NUM_FILE" ]; then
+    BUILD_NUM="$(cat "$BUILD_NUM_FILE" 2>/dev/null || echo 0)"
+    BUILD_NUM=$((BUILD_NUM + 1))
+else
+    BUILD_NUM=1
+fi
+echo "$BUILD_NUM" > "$BUILD_NUM_FILE"
+
+STAMP="${DATE_STAMP}-b${BUILD_NUM}"
+# Modules are now embedded into the kernel zip (single flashable package).
 ZIPNAME="opx-nethunter-v${VERSION}-ginkgo-${STAMP}.zip"
-MZIPNAME="opx-nethunter-v${VERSION}-modules-${STAMP}.zip"
 FZIPNAME="opx-nethunter-v${VERSION}-firmware-${STAMP}.zip"
 
 # ---------- Toolchain ----------
@@ -119,10 +133,36 @@ main() {
             "$OUT/drivers/net/wireless/realtek/" 2>/dev/null || true
     fi
 
-    # ---------- Package kernel zip ----------
-    echo "==> Packaging kernel zip"
+    echo "==> Packaging kernel zip (modules embedded)"
     rm -rf "$OUT/kernel-zip"
     mkdir -p "$OUT/kernel-zip"
+    # Inject installed modules into the AnyKernel3/Magisk module dir so a single
+    # zip carries kernel + oob drivers (no separate modules package at flash time).
+    mkdir -p "$OUT/kernel-zip/module_loaders/modules"
+    find "$OUT/modules" -name '*.ko' \
+        -exec cp {} "$OUT/kernel-zip/module_loaders/modules/" \; 2>/dev/null || true
+    [ -f "$REPO_ROOT/oob/8821au/8821au.ko" ] && \
+        cp "$REPO_ROOT/oob/8821au/8821au.ko" \
+        "$OUT/kernel-zip/module_loaders/modules/"
+    [ -f "$REPO_ROOT/oob/8814au/8814au.ko" ] && \
+        cp "$REPO_ROOT/oob/8814au/8814au.ko" \
+        "$OUT/kernel-zip/module_loaders/modules/"
+
+    MODULES_VERSION="$(cat "$REPO_ROOT/VERSION" 2>/dev/null || echo 1.0.0)"
+    MODULES_STAMP="$(date +%Y%m%d)"
+    cat > "$OUT/kernel-zip/module_loaders/module.prop" <<PROP
+id=opx_kernel_modules
+name=OPX Kernel Modules
+version=${MODULES_VERSION}-${MODULES_STAMP}
+versionCode=${BUILD_NUM}
+description=Auto-loads OPX NetHunter out-of-tree .ko drivers at boot (embedded build ${STAMP})
+author=OPX TEAM / OP AMINUL FF
+PROP
+    cp "$REPO_ROOT/magisk/kernel-modules/service.sh" \
+        "$OUT/kernel-zip/module_loaders/service.sh" 2>/dev/null || true
+    cp "$REPO_ROOT/magisk/kernel-modules/uninstall.sh" \
+        "$OUT/kernel-zip/module_loaders/uninstall.sh" 2>/dev/null || true
+
     cp -r "$REPO_ROOT/AnyKernel3" "$OUT/kernel-zip/"
     cp "$OUT/arch/arm64/boot/Image" "$OUT/kernel-zip/"
     [ -f "$OUT/arch/arm64/boot/Image.gz-dtb" ] && \
@@ -131,46 +171,17 @@ main() {
     (cd "$OUT/kernel-zip" && zip -r9q "../$ZIPNAME" .)
     echo "Kernel zip: $OUT/$ZIPNAME"
 
-    # ---------- Package modules zip ----------
-    echo "==> Packaging modules zip"
-    rm -rf "$OUT/mod-zip"
-    mkdir -p "$OUT/mod-zip/system/lib/modules"
-    find "$OUT/modules" -name '*.ko' \
-        -exec cp {} "$OUT/mod-zip/system/lib/modules/" \; 2>/dev/null || true
-    [ -f "$REPO_ROOT/oob/8821au/8821au.ko" ] && \
-        cp "$REPO_ROOT/oob/8821au/8821au.ko" \
-        "$OUT/mod-zip/system/lib/modules/"
-    [ -f "$REPO_ROOT/oob/8814au/8814au.ko" ] && \
-        cp "$REPO_ROOT/oob/8814au/8814au.ko" \
-        "$OUT/mod-zip/system/lib/modules/"
-
-    mkdir -p "$OUT/mod-zip"
-    cat > "$OUT/mod-zip/module.prop" <<'PROP'
-id=opx_kernel_modules
-name=OPX Kernel Modules
-version=1.0.0
-versionCode=1
-description=Auto-loads OPX NetHunter out-of-tree .ko drivers at boot
-author=OPX TEAM / OP AMINUL FF
-PROP
-    cp "$REPO_ROOT/magisk/kernel-modules/service.sh" \
-        "$OUT/mod-zip/service.sh" 2>/dev/null || true
-    cp "$REPO_ROOT/magisk/kernel-modules/uninstall.sh" \
-        "$OUT/mod-zip/uninstall.sh" 2>/dev/null || true
-    (cd "$OUT/mod-zip" && zip -r9q "../$MZIPNAME" .)
-    echo "Modules zip: $OUT/$MZIPNAME"
-
     # ---------- Package firmware zip ----------
     echo "==> Packaging firmware zip"
     rm -rf "$OUT/fw-zip"
     mkdir -p "$OUT/fw-zip/firmware"
     cp -r "$REPO_ROOT/oob/firmware/"* \
         "$OUT/fw-zip/firmware/" 2>/dev/null || true
-    cat > "$OUT/fw-zip/module.prop" <<'PROP'
+    cat > "$OUT/fw-zip/module.prop" <<PROP
 id=opx_wifi_firmware
 name=OPX WiFi Firmware
-version=1.0.0
-versionCode=1
+version=${MODULES_VERSION}-${MODULES_STAMP}
+versionCode=${BUILD_NUM}
 description=USB WiFi firmware for OPX NetHunter kernel
 author=OPX TEAM / OP AMINUL FF
 PROP
@@ -181,7 +192,6 @@ PROP
     ls -lh "$OUT"/*.zip
     printf '%s\n' "$STAMP" > "$OUT/BUILD_STAMP"
     printf '%s\n' "$ZIPNAME" > "$OUT/ARTIFACTS"
-    printf '%s\n' "$MZIPNAME" >> "$OUT/ARTIFACTS"
     printf '%s\n' "$FZIPNAME" >> "$OUT/ARTIFACTS"
 }
 

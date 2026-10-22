@@ -9,10 +9,9 @@ Base   : crDroid 9.15 (A13)
 ## 1. Prerequisites
 - A rooted device (Magisk v26+) with an A13 ROM (crDroid 9.15 recommended).
 - TWRP or a working recovery that can flash AnyKernel3 zips.
-- The three zips from the release:
-  - `opx-nethunter-v1.0.0-ginkgo-*.zip`   (kernel / AnyKernel3)
-  - `opx-nethunter-v1.0.0-modules-*.zip`  (Magisk modules - OOB drivers)
-  - `opx-nethunter-v1.0.0-firmware-*.zip` (USB WiFi firmware)
+- The two zips from an OPX NetHunter release:
+  - `opx-nethunter-v1.0.0-ginkgo-<STAMP>.zip`  (kernel / AnyKernel3 **with embedded Magisk modules**)
+  - `opx-nethunter-v1.0.0-firmware-<STAMP>.zip` (USB WiFi firmware)
 
 ---
 
@@ -25,24 +24,25 @@ Flash `crDroid-9.15-ginkgo` into /system via TWRP. Reboot to recovery.
 Flash `magisk-v26*.zip` into /boot via TWRP. Reboot to system, open
 Magisk, grant root.
 
-### Step 3 - OPX Kernel
-In TWRP: `Install image` -> select `opx-nethunter-v1.0.0-ginkgo-*.zip`
+### Step 3 - OPX Kernel (single flash)
+In TWRP: `Install image` -> select `opx-nethunter-v1.0.0-ginkgo-<STAMP>.zip`
 -> `/dev/block/bootdevice/by-name/boot`. Reboot.
 
-### Step 4 - Modules zip
-Open Magisk Manager -> `Install` -> `Select zip` ->
-`opx-nethunter-v1.0.0-modules-*.zip` -> Reboot.
+This single zip contains:
+- the OPX NetHunter kernel + dtb (AnyKernel3 installer), **and**
+- the `opx_kernel_modules` Magisk module (auto-loads OOB `.ko` drivers
+  at boot, e.g. `8821au`, `8814au`).
 
-Verify loaded modules:
+Verify loaded modules after boot:
 ```sh
 su -c 'lsmod | grep -E "8188|88xx|88x2|mt76|8821|8814"'
 ```
 
-### Step 5 - Firmware zip
+### Step 4 - Firmware zip
 Open Magisk Manager -> `Install` -> `Select zip` ->
-`opx-nethunter-v1.0.0-firmware-*.zip` -> Reboot.
+`opx-nethunter-v1.0.0-firmware-<STAMP>.zip` -> Reboot.
 
-### Step 6 - NetHunter
+### Step 5 - NetHunter
 Boot into Kali (NetHunter) from the sideband. Plug in a supported USB
 WiFi adapter and run:
 ```sh
@@ -62,8 +62,9 @@ nethunter-setup.sh
 | MT7610U         | mt76x0u (in-tree)| monitor      |
 | MT7612U         | mt76x2u (in-tree)| monitor      |
 
-> Note: OOB drivers require the modules zip to be flashed for the .ko
-> files to be present on the device.
+> Note: The OOB drivers (`8821au`, `8814au`) are **embedded in the kernel zip**,
+> so no separate modules package is needed — they are auto-loaded by the
+> `opx_kernel_modules` Magisk module inside the kernel zip.
 
 ---
 
@@ -79,5 +80,6 @@ nethunter-setup.sh
 ---
 
 ## 5. Uninstall
-Remove the modules zip in Magisk, then either flash the stock kernel
-or reflash the previous OPX kernel.
+Remove the firmware Magisk module in Magisk, then either flash the stock kernel
+or reflash the previous OPX kernel (the kernel zip is self-contained and does
+not require a separate modules package).
