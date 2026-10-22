@@ -33,7 +33,4 @@ jobs:
           ROM_URL: ${{ github.event.inputs.rom_url }}
           TWRP_URL: ${{ github.event.inputs.twrp_url }}
         run: |
-          if [ -n "$TWRP_URL" ]; then
-              sed -i 's/TWRP_URL="$1"/TWRP_URL="$1"/' scripts/mirror-rom.sh
-          fi
           bash scripts/mirror-rom.sh
