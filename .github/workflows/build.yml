@@ -46,6 +46,16 @@ jobs:
           echo "TC_DIR=$TC_DIR" >> "$GITHUB_ENV"
           "$TC_DIR/bin/clang" --version
 
+      - name: Cache toolchain + kernel build outputs
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/out
+            ${{ github.workspace }}/toolchains/clang-10032024
+            ${{ github.workspace }}/toolchains/system
+          key: ${{ runner.os }}-opx-kernel-${{ hashFiles('arch/arm64/configs/nethunter_defconfig','build.sh') }}-${{ github.sha }}
+          restore-keys: ${{ runner.os }}-opx-kernel-
+
       - name: Build kernel and packages
         run: |
           bash build.sh

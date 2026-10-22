@@ -28,6 +28,21 @@ Developer: **OPX TEAM / OP AMINUL FF**
 
 ---
 
+## WiFi / Bluetooth
+
+- **Internal WiFi**: This kernel mirrors the ikteach/ginkgo reference config, which
+  keeps the QCOM in-tree wifi driver (`CONFIG_WCNSS_CORE`/`CONFIG_PRONTO_WLAN`)
+  **disabled**. Monitor Mode + packet injection + AP mode on the internal WCN3990
+  are instead provided by the **Android ROM's `qcwcn` HAL** (same as upstream
+  NetHunter on ginkgo/trinket). No extra kernel driver flag is required.
+- **Bluetooth**: Fully enabled (`CONFIG_BT*`, including LE, RFCOMM, HIDP, HCIUART
+  and vendor HCI drivers).
+- **External USB WiFi**: Monitor/injection/AP supported via USB adapters built into
+  the modules zip (`rtl88xxau`, `8821au`, `8814au`, `mt76`, `rtl8814au`). See
+  `magisk/kernel-modules` and `magisk/wifi-firmware`.
+
+---
+
 ## Repository Layout
 ```
 arch/ drivers/ ...   Full Linux 4.14 kernel source (in-tree, NetHunter config)
