@@ -28,11 +28,26 @@ else
 fi
 
 echo "==> Using URL: $URL"
-# SourceForge /download redirects to a mirror; -L follows, --trust-server-auth off
 BASENAME="$(basename "$(printf '%s' "$URL" | sed 's|/download$||')")"
+
 echo "==> Downloading (this can take a few minutes)..."
-curl -L -o rom.zip "$URL"
-echo "==> Downloaded $(ls -la rom.zip | awk '{print $5}') bytes"
+curl -L -A "Mozilla/5.0" --connect-timeout 30 -o rom.zip "$URL"
+
+# Validate: abort if we did not get a real zip (SF sometimes returns a 403 page)
+CT="$(curl -sIL -A "Mozilla/5.0" "$URL" | grep -i '^content-type:' | tail -1)"
+SIZE="$(stat -c%s rom.zip 2>/dev/null || echo 0)"
+echo "==> Downloaded size: $SIZE bytes ; Content-Type: $CT"
+
+# Sanity: accept only application/zip or application/octet-stream and > 10MB
+case "$CT" in
+    *zip*|*octet-stream*) : ;;
+    *) echo "ERROR: unexpected Content-Type ($CT) — not a zip"; exit 1 ;;
+esac
+if [ "$SIZE" -lt 10485760 ]; then
+    echo "ERROR: downloaded file too small ($SIZE bytes) — likely an error page" >&2
+    echo "--- first 200 bytes ---"; head -c 200 rom.zip; echo
+    exit 1
+fi
 
 # Rename to the official filename for clarity
 mv -f rom.zip "${BASENAME}"
