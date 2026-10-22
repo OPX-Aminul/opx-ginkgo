@@ -1,7 +1,19 @@
 # OPX NetHunter Kernel - v1.0.0
 
 Kali NetHunter kernel for **Redmi Note 8 / 8T** (`ginkgo` / `willow`),
-Android 11-13, built from the official NetHunter A13 `ginkgo` base
+Android 11-13, built from the official NetHunter A13 `ginkgo` base.
+
+Upstream reference (official Kali NetHunter methodology):
+- Official docs: https://www.kali.org/docs/nethunter/nethunter-kernel/
+- Build pipeline: HuskyDG [`kernelbuilds`](https://github.com/HuskyDG/kernelbuilds)
+  (the same source that powers the kernels listed at
+  https://nethunter.kali.org/).
+
+> Note: `ikteach/ginkgo_Kernel` (previously referenced) is a downstream mirror
+> of the HuskyDG baseline; it is functionally identical in `defconfig` and
+> NetHunter patch-set, but the canonical upstream for reproducing the official
+> Kali NetHunter build is HuskyDG's `kernelbuilds` tooling linked above.
+
 (`ikteach/ginkgo_Kernel`, Linux 4.14).
 
 Developer: **OPX TEAM / OP AMINUL FF**
@@ -30,11 +42,12 @@ Developer: **OPX TEAM / OP AMINUL FF**
 
 ## WiFi / Bluetooth
 
-- **Internal WiFi**: This kernel mirrors the ikteach/ginkgo reference config, which
-  keeps the QCOM in-tree wifi driver (`CONFIG_WCNSS_CORE`/`CONFIG_PRONTO_WLAN`)
-  **disabled**. Monitor Mode + packet injection + AP mode on the internal WCN3990
-  are instead provided by the **Android ROM's `qcwcn` HAL** (same as upstream
-  NetHunter on ginkgo/trinket). No extra kernel driver flag is required.
+- **Internal WiFi**: This kernel matches the **official Kali NetHunter baseline**
+  (HuskyDG `kernelbuilds`, `kali-nethunter` patch-set), which keeps the QCOM
+  in-tree wifi driver (`CONFIG_WCNSS_CORE`/`CONFIG_PRONTO_WLAN`) **disabled**.
+  Monitor Mode + packet injection + AP mode on the internal WCN3990 are surfaced
+  through the **Android ROM's `qcwcn` HAL** — identical to how the official
+  `nethunter.kali.org` ginkgo kernel works (no extra kernel flag required).
 - **Bluetooth**: Fully enabled (`CONFIG_BT*`, including LE, RFCOMM, HIDP, HCIUART
   and vendor HCI drivers).
 - **External USB WiFi**: Monitor/injection/AP supported via USB adapters built into
