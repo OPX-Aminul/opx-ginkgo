@@ -179,6 +179,10 @@ PROP
 
     echo "==> All artifacts ready in $OUT"
     ls -lh "$OUT"/*.zip
+    printf '%s\n' "$STAMP" > "$OUT/BUILD_STAMP"
+    printf '%s\n' "$ZIPNAME" > "$OUT/ARTIFACTS"
+    printf '%s\n' "$MZIPNAME" >> "$OUT/ARTIFACTS"
+    printf '%s\n' "$FZIPNAME" >> "$OUT/ARTIFACTS"
 }
 
 main "$@"

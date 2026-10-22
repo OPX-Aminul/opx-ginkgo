@@ -63,20 +63,23 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           VERSION="$(cat VERSION)"
-          STAMP="$(date +%Y%m%d-%H%M)"
+          STAMP="$(cat out/BUILD_STAMP)"
           TAG="opx-nethunter-v${VERSION}-${STAMP}-${GITHUB_RUN_NUMBER}"
+          GZIP="$(sed -n 1p out/ARTIFACTS)"
+          MZIP="$(sed -n 2p out/ARTIFACTS)"
+          FZIP="$(sed -n 3p out/ARTIFACTS)"
           NOTES="Automated NetHunter kernel build for ginkgo/willow.
 
           Assets:
-          - opx-nethunter-v${VERSION}-ginkgo-${STAMP}.zip  (Kernel / AnyKernel3)
-          - opx-nethunter-v${VERSION}-modules-${STAMP}.zip (Magisk modules)
-          - opx-nethunter-v${VERSION}-firmware-${STAMP}.zip (USB WiFi firmware)
+          - ${GZIP}  (Kernel / AnyKernel3)
+          - ${MZIP}  (Magisk modules)
+          - ${FZIP}  (USB WiFi firmware)
 
           Flash guide: docs/FLASH.md"
           gh release create "$TAG" \
             --title "OPX NetHunter v${VERSION} (${STAMP})" \
             --notes "$NOTES" \
-            out/opx-nethunter-v${VERSION}-ginkgo-${STAMP}.zip \
-            out/opx-nethunter-v${VERSION}-modules-${STAMP}.zip \
-            out/opx-nethunter-v${VERSION}-firmware-${STAMP}.zip
+            out/${GZIP} \
+            out/${MZIP} \
+            out/${FZIP}
           echo "Release created: $TAG"
