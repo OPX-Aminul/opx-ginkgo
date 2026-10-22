@@ -61,6 +61,8 @@ build_oob_driver() {
         cd "$dir"
         make ARCH=arm64 KSRC="$OUT" \
             CROSS_COMPILE="${CROSS:-aarch64-linux-gnu-}" \
+            CC=clang LD=ld.lld AR=llvm-ar NM=llvm-nm \
+            OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip \
             modules 2>&1 | tail -20
     )
 }
@@ -72,32 +74,37 @@ main() {
         export PATH="$TC_DIR/bin:$PATH"
     fi
 
-    export CC="clang"
-    export LD="ld.lld"
-    export AR="llvm-ar"
-    export NM="llvm-nm"
-    export OBJCOPY="llvm-objcopy"
-    export OBJDUMP="llvm-objdump"
-    export STRIP="llvm-strip"
-    export HOSTCC="clang"
-    export HOSTCXX="clang++"
     export CROSS="aarch64-linux-gnu-"
     export ARCH=arm64
 
+    MAKE_COMMON=(
+        ARCH=arm64
+        CROSS_COMPILE="$CROSS"
+        CC=clang
+        LD=ld.lld
+        AR=llvm-ar
+        NM=llvm-nm
+        OBJCOPY=llvm-objcopy
+        OBJDUMP=llvm-objdump
+        STRIP=llvm-strip
+        HOSTCC=clang
+        HOSTCXX=clang++
+    )
+
     echo "==> Generating config"
-    make -C "$SRC" O="$OUT" ARCH=arm64 nethunter_defconfig
+    make -C "$SRC" O="$OUT" "${MAKE_COMMON[@]}" nethunter_defconfig
 
     echo "==> Compiling kernel"
-    make -C "$SRC" O="$OUT" -j"$JOBS" ARCH=arm64 all
+    make -C "$SRC" O="$OUT" -j"$JOBS" "${MAKE_COMMON[@]}" all
 
     echo "==> Building Image.gz-dtb"
-    make -C "$SRC" O="$OUT" ARCH=arm64 Image.gz-dtb || true
+    make -C "$SRC" O="$OUT" "${MAKE_COMMON[@]}" Image.gz-dtb || true
 
     echo "==> Building dtbo.img"
-    make -C "$SRC" O="$OUT" ARCH=arm64 dtbo.img || true
+    make -C "$SRC" O="$OUT" "${MAKE_COMMON[@]}" dtbo.img || true
 
     echo "==> Installing modules"
-    make -C "$SRC" O="$OUT" ARCH=arm64 \
+    make -C "$SRC" O="$OUT" "${MAKE_COMMON[@]}" \
         modules_install INSTALL_MOD_PATH="$OUT/modules"
 
     # Build OOB drivers (only if .ko did not land in tree)
